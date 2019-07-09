@@ -19,10 +19,6 @@ class ToDoListViewController : UITableViewController {
         
         loadItems()
         
-//        if let items = defaults.array(forKey: "ToDoListArray") as? [Item] {
-//            itemArray = items
-//        }
-       
     }
 
     override func tableView(_ tableView : UITableView, cellForRowAt indexPath : IndexPath) -> UITableViewCell {
@@ -106,8 +102,6 @@ class ToDoListViewController : UITableViewController {
     }
     
     func loadItems() {
-        
-        
         
         if let data = try? Data(contentsOf: dataFilePath!) {
              let decoder = PropertyListDecoder()

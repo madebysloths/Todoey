@@ -9,9 +9,10 @@
 import Foundation
 
 
-class Item {
+class Item : Codable {
     
     var name : String = ""
     var done : Bool = false
+    
     
 }

@@ -7,15 +7,19 @@
 //
 
 import UIKit
+import CoreData
 
 class ToDoListViewController : UITableViewController {
     
     var itemArray = [Item]()
-    let dataFilePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("Items.plist")
+    
+    let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
 
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        print(FileManager.default.urls(for: .documentDirectory, in: .userDomainMask))
         
         loadItems()
         
@@ -45,10 +49,12 @@ class ToDoListViewController : UITableViewController {
         
         itemArray[indexPath.row].done = !itemArray[indexPath.row].done
         
+//        context.delete(itemArray[indexPath.row])
+//        itemArray.remove(at: indexPath.row)
+        
+        
         saveItems()
         
-        tableView.reloadData()
-    
     // Turn list checkmark on and off depending on state of cell.
         
         tableView.deselectRow(at : indexPath, animated: true)
@@ -65,8 +71,11 @@ class ToDoListViewController : UITableViewController {
         let action = UIAlertAction(title: "Add Item", style: .default) { (action) in
             // what will happen after the user clicks the add button item on our UI Alert
             
-            let newItem = Item()
+            
+            
+            let newItem = Item(context: self.context)
             newItem.name = textField.text!
+            newItem.done = false
             
             self.itemArray.append(newItem)
             
@@ -88,13 +97,10 @@ class ToDoListViewController : UITableViewController {
     
     func saveItems() {
         
-        let encoder = PropertyListEncoder()
-        
         do {
-            let data = try encoder.encode(itemArray)
-            try data.write(to: dataFilePath!)
+            try context.save()
         } catch {
-            print(error)
+           print(error)
         }
         
         self.tableView.reloadData()
@@ -102,14 +108,12 @@ class ToDoListViewController : UITableViewController {
     }
     
     func loadItems() {
-        
-        if let data = try? Data(contentsOf: dataFilePath!) {
-             let decoder = PropertyListDecoder()
-            do {
-                itemArray = try decoder.decode([Item].self, from: data)
-            } catch {
-                print(error)
-            }
+
+        let request : NSFetchRequest<Item> = Item.fetchRequest()
+        do {
+            itemArray = try context.fetch(request)
+        } catch {
+            print(error)
         }
     }
 }

@@ -95,6 +95,8 @@ class ToDoListViewController : UITableViewController {
         
     }
     
+    //MARK: - Model Manipulation Model
+    
     func saveItems() {
         
         do {
@@ -107,13 +109,31 @@ class ToDoListViewController : UITableViewController {
         
     }
     
-    func loadItems() {
+    func loadItems(with request : NSFetchRequest<Item> = Item.fetchRequest()) {
 
-        let request : NSFetchRequest<Item> = Item.fetchRequest()
+        
         do {
             itemArray = try context.fetch(request)
         } catch {
             print(error)
         }
     }
+}
+
+//MARK: - Search bar methods
+
+extension ToDoListViewController : UISearchBarDelegate {
+    
+    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
+        let searchRequest : NSFetchRequest<Item> = Item.fetchRequest()
+        
+        searchRequest.predicate = NSPredicate(format: "name CONTAINS[cd] %@", searchBar.text!)
+        
+        searchRequest.sortDescriptors = [NSSortDescriptor(key: "name", ascending: true)]
+        
+        loadItems(with: searchRequest)
+                
+        tableView.reloadData()
+    }
+    
 }

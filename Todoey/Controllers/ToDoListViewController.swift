@@ -14,15 +14,20 @@ class ToDoListViewController : UITableViewController {
     var itemArray = [Item]()
     
     let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
-
+    
+    var selectedCategory : Category? {
+        didSet{
+           
+            
+            loadItems()
+            
+        }
+    }
     
     override func viewDidLoad() {
+        
         super.viewDidLoad()
-        
-        print(FileManager.default.urls(for: .documentDirectory, in: .userDomainMask))
-        
-        loadItems()
-        
+
     }
 
     override func tableView(_ tableView : UITableView, cellForRowAt indexPath : IndexPath) -> UITableViewCell {
@@ -76,6 +81,7 @@ class ToDoListViewController : UITableViewController {
             let newItem = Item(context: self.context)
             newItem.name = textField.text!
             newItem.done = false
+            newItem.parentCategory = self.selectedCategory
             
             self.itemArray.append(newItem)
             
@@ -109,14 +115,22 @@ class ToDoListViewController : UITableViewController {
         
     }
     
-    func loadItems(with request : NSFetchRequest<Item> = Item.fetchRequest()) {
+    func loadItems(with request : NSFetchRequest<Item> = Item.fetchRequest(), predicate : NSPredicate? = nil) {
 
+        let categoryPredicate = NSPredicate(format: "parentCategory.name MATCHES %@", selectedCategory!.name!)
+        
+        if let additionalPredicate = predicate {
+            request.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [categoryPredicate, additionalPredicate])
+        } else {
+            request.predicate = categoryPredicate
+        }
         
         do {
             itemArray = try context.fetch(request)
         } catch {
             print(error)
         }
+        tableView.reloadData()
     }
 }
 
@@ -131,9 +145,20 @@ extension ToDoListViewController : UISearchBarDelegate {
         
         searchRequest.sortDescriptors = [NSSortDescriptor(key: "name", ascending: true)]
         
-        loadItems(with: searchRequest)
-                
+        loadItems()
+        
         tableView.reloadData()
     }
     
+    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+        if searchBar.text?.count == 0 {
+            
+            
+            DispatchQueue.main.async {
+                searchBar.resignFirstResponder()
+            }
+            
+            loadItems()
+        }
+    }
 }
